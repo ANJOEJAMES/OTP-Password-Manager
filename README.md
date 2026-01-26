@@ -16,11 +16,16 @@ A modern, secure OTP-based authentication system with an integrated password man
 
 ### 🔑 Password Management
 - **Integrated Dashboard**: All-in-one password management interface
-- **Password Generator**: Built-in generator with customizable options:
-  - Adjustable length (4-20 characters)
-  - Uppercase/lowercase letters
-  - Numbers and symbols
-  - Mandatory string inclusion
+- **Dual Input Modes**: 
+  - **Generate Password**: Built-in generator with customizable options
+    - Adjustable length (4-20 characters)
+    - Uppercase/lowercase letters
+    - Numbers and symbols
+    - Mandatory string inclusion
+  - **Manual Entry**: Add existing passwords from other services
+    - Type passwords directly
+    - Toggle visibility for verification
+    - Perfect for password migration
 - **Secure Storage**: AES-256 encryption for all passwords
 - **User Isolation**: Each user sees only their own passwords
 - **CRUD Operations**: Create, read, and delete saved passwords
@@ -37,6 +42,8 @@ A modern, secure OTP-based authentication system with an integrated password man
   - Button lift on hover
   - Modal transitions
   - Smooth scrolling
+  - Mode switching animations
+- **Intuitive Mode Toggle**: Easy switching between generate and manual entry
 - **Modular CSS Architecture**: Organized, maintainable stylesheets
 - **Fully Responsive**: Optimized for desktop, tablet, and mobile
 - **Modern Typography**: Poppins font family
@@ -331,7 +338,9 @@ Content-Type: application/json
 2. **Dashboard Operations**:
    - View saved passwords in table
    - Click "Add Password" to open modal
-   - Generate secure password
+   - Choose password mode:
+     - **Generate Password**: Customize and auto-generate secure passwords
+     - **Enter Manually**: Type in existing passwords from other services
    - Save password to vault
    - Search passwords by website
    - Copy, view, or delete passwords

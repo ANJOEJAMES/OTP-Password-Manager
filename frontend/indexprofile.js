@@ -105,13 +105,58 @@ document.addEventListener("DOMContentLoaded", function () {
 
             function closeModal() {
                 modal.classList.add("hidden");
-                // Optional: clear inputs on close
-                // websiteInput.value = "";
+                // Reset to generate mode
+                setPasswordMode('generate');
+                // Clear inputs
+                websiteInput.value = "";
+                passwordInput.value = "";
+                document.getElementById("manual-password").value = "";
             }
 
             addPasswordBtn.addEventListener("click", openModal);
             closeModalBtn.addEventListener("click", closeModal);
             cancelBtn.addEventListener("click", closeModal);
+
+            // Password Mode Toggle
+            const modeBtns = document.querySelectorAll(".mode-btn");
+            const generatorSection = document.getElementById("generator-section");
+            const manualSection = document.getElementById("manual-password-section");
+            const manualPasswordInput = document.getElementById("manual-password");
+            const toggleManualVisibility = document.getElementById("toggle-manual-visibility");
+
+            function setPasswordMode(mode) {
+                modeBtns.forEach(btn => {
+                    if (btn.dataset.mode === mode) {
+                        btn.classList.add("active");
+                    } else {
+                        btn.classList.remove("active");
+                    }
+                });
+
+                if (mode === "generate") {
+                    generatorSection.classList.remove("hidden");
+                    manualSection.classList.add("hidden");
+                } else {
+                    generatorSection.classList.add("hidden");
+                    manualSection.classList.remove("hidden");
+                    manualPasswordInput.focus();
+                }
+            }
+
+            modeBtns.forEach(btn => {
+                btn.addEventListener("click", () => setPasswordMode(btn.dataset.mode));
+            });
+
+            // Toggle manual password visibility
+            toggleManualVisibility.addEventListener("click", function () {
+                if (manualPasswordInput.type === "password") {
+                    manualPasswordInput.type = "text";
+                    this.textContent = "🙈";
+                } else {
+                    manualPasswordInput.type = "password";
+                    this.textContent = "👁️";
+                }
+            });
 
             // Sync Length Range and Number Input
             lengthRange.addEventListener("input", (e) => lengthInput.value = e.target.value);
@@ -261,10 +306,21 @@ document.addEventListener("DOMContentLoaded", function () {
             // Save Password Logic
             savePasswordBtn.addEventListener("click", async function () {
                 const website = websiteInput.value.trim();
-                const password = passwordInput.value;
 
-                if (!website || !password) {
-                    alert("Please enter a website and generate a password.");
+                // Check which mode is active
+                const isManualMode = !manualSection.classList.contains("hidden");
+                const password = isManualMode
+                    ? manualPasswordInput.value.trim()
+                    : passwordInput.value;
+
+                if (!website) {
+                    alert("Please enter a website or app name.");
+                    return;
+                }
+
+                if (!password) {
+                    const modeText = isManualMode ? "enter a password" : "generate a password";
+                    alert(`Please ${modeText}.`);
                     return;
                 }
 
@@ -283,13 +339,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         alert("Password saved successfully!");
                         fetchPasswords(email);
                         closeModal();
-                        websiteInput.value = "";
-                        // passwordInput.value = ""; // Optional: keep last generated
                     } else {
                         alert("Failed to save password.");
                     }
                 } catch (error) {
                     console.error("Error saving password:", error);
+                    alert("Error saving password. Please try again.");
                 }
             });
 
