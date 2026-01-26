@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Manage your saved passwords securely">
   <title>💾 Password Manager</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/dashboard.css">
 </head>
 
 <body>
@@ -19,12 +20,6 @@
       <nav class="sidebar-nav">
         <a href="#" class="nav-item active">
           <span class="icon">📊</span> Dashboard
-        </a>
-        <a href="password-generator.html" class="nav-item">
-          <span class="icon">🔑</span> Generator
-        </a>
-        <a href="profile.html" class="nav-item">
-          <span class="icon">👤</span> Profile
         </a>
         <div class="nav-divider"></div>
         <button id="logout-btn" class="nav-item logout">
@@ -99,7 +94,7 @@
 
   <!-- Add Password Modal -->
   <div id="add-password-modal" class="modal-overlay hidden">
-    <div class="modal-content glass-card">
+    <div class="modal-content">
       <div class="modal-header">
         <h3>Add New Password</h3>
         <button id="close-modal-btn" class="close-btn">×</button>

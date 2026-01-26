@@ -22,8 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../frontend"))); // Serve static files
 
 // **Serve HTML Pages**
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "../frontend/password-generator.html")));
-app.get("/profile", (req, res) => res.sendFile(path.join(__dirname, "../frontend/profile.html")));
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "../frontend/index.html")));
 app.get("/indexprofile", (req, res) => res.sendFile(path.join(__dirname, "../frontend/indexprofile.html")));
 
 // **MySQL Connection**
@@ -114,22 +113,16 @@ app.post("/verify-otp", (req, res) => {
       db.query("SELECT COUNT(*) as passwordCount FROM passwords WHERE user_id = ?", [userId], (err, passwordResults) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
 
-        const passwordCount = passwordResults[0].passwordCount;
-
-        if (passwordCount > 0) {
-          // User has saved passwords - redirect to password manager
-          res.json({ success: true, redirect: "indexprofile.html", email: email });
-        } else {
-          // User exists but has no passwords - redirect to password generator
-          res.json({ success: true, redirect: "password-generator.html", email: email });
-        }
+        // Always redirect to dashboard (indexprofile.html)
+        res.json({ success: true, redirect: "indexprofile.html", email: email });
       });
     } else {
-      // New user - create user and redirect to password generator
+      // New user - create user and redirect to dashboard
       db.query("INSERT INTO users (email) VALUES (?)", [email], (err, insertResult) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
 
-        res.json({ success: true, redirect: "password-generator.html", email: email });
+        // Redirect new user to dashboard
+        res.json({ success: true, redirect: "indexprofile.html", email: email });
       });
     }
   });

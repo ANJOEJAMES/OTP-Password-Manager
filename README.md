@@ -1,6 +1,6 @@
 # 🔐 OTP Login & Password Manager System
 
-A modern, secure OTP-based authentication system with an integrated password manager featuring an ultra-modern dark theme UI with neon accents and advanced animations.
+A modern, secure OTP-based authentication system with an integrated password manager featuring an ultra-modern dark theme UI with glassmorphism effects and smooth animations.
 
 ![Ultra-Modern Dark Theme](https://img.shields.io/badge/Design-Ultra--Modern%20Dark%20Theme-00d4ff?style=for-the-badge)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
@@ -12,13 +12,11 @@ A modern, secure OTP-based authentication system with an integrated password man
 ### 🔒 Authentication
 - **OTP-Based Login**: Secure email-based one-time password authentication
 - **User Session Management**: Persistent login with localStorage
-- **Auto-Redirect Logic**: Smart routing based on user state
-  - New users → Password Generator
-  - Users with saved passwords → Password Manager
-  - Users without passwords → Password Generator
+- **Unified Dashboard**: All users redirect to the password manager dashboard after verification
 
 ### 🔑 Password Management
-- **Password Generator**: Customizable password generation with:
+- **Integrated Dashboard**: All-in-one password management interface
+- **Password Generator**: Built-in generator with customizable options:
   - Adjustable length (4-20 characters)
   - Uppercase/lowercase letters
   - Numbers and symbols
@@ -27,17 +25,19 @@ A modern, secure OTP-based authentication system with an integrated password man
 - **User Isolation**: Each user sees only their own passwords
 - **CRUD Operations**: Create, read, and delete saved passwords
 - **Copy to Clipboard**: One-click password copying
+- **Search Functionality**: Filter passwords by website name
 
 ### 🎨 Modern UI/UX
 - **Ultra-Modern Dark Theme**: Deep navy background with neon accents
 - **Glassmorphism Effects**: Translucent cards with backdrop blur
-- **Neon Glows**: Cyan, purple, and pink accent colors
-- **Advanced Animations**:
-  - Floating particle background
-  - Pulsing gradient overlays
-  - Button ripple effects
-  - 3D lift on hover
-  - Smooth transitions
+- **Gradient Accents**: Cyan, purple, and pink color scheme
+- **Smooth Animations**:
+  - Rotating gradient background
+  - Floating hover effects
+  - Button lift on hover
+  - Modal transitions
+  - Smooth scrolling
+- **Modular CSS Architecture**: Organized, maintainable stylesheets
 - **Fully Responsive**: Optimized for desktop, tablet, and mobile
 - **Modern Typography**: Poppins font family
 
@@ -54,7 +54,7 @@ A modern, secure OTP-based authentication system with an integrated password man
 
 ### Frontend
 - **HTML5** - Structure
-- **CSS3** - Styling with advanced animations
+- **Modular CSS3** - Organized styling with separate files
 - **Vanilla JavaScript** - Client-side logic
 - **Modern CSS Features**:
   - CSS Variables
@@ -159,15 +159,14 @@ otp-login-system/
 ├── database/
 │   └── schema.sql             # MySQL database schema
 ├── frontend/
+│   ├── css/
+│   │   ├── base.css           # Shared styles (variables, buttons, inputs)
+│   │   ├── login.css          # Login page styles
+│   │   └── dashboard.css      # Dashboard page styles
 │   ├── index.html             # OTP login page
-│   ├── password-generator.html # Password generator
-│   ├── indexprofile.html      # Password manager
-│   ├── profile.html           # Profile access page
+│   ├── indexprofile.html      # Password manager dashboard
 │   ├── script.js              # Login logic
-│   ├── password-generator.js  # Password generation logic
-│   ├── indexprofile.js        # Password manager logic
-│   ├── profile.js             # Profile logic
-│   └── styles.css             # Ultra-modern dark theme
+│   └── indexprofile.js        # Dashboard logic
 ├── .env                       # Environment variables
 ├── package.json               # Dependencies
 └── README.md                  # Documentation
@@ -276,17 +275,22 @@ Content-Type: application/json
   - Orange (`#ff6b35`)
   - Green (`#00ff88`)
 
+### CSS Architecture
+- **base.css**: Variables, reset, common components
+- **login.css**: Login page specific styles
+- **dashboard.css**: Dashboard, sidebar, table, modal styles
+
 ### Animations
-- Floating particle background
-- Pulsing radial gradients
-- Button ripple effects
-- 3D lift on hover
+- Rotating gradient background
+- Floating hover effects
+- Button lift animations
 - Neon glow effects
-- Smooth cubic-bezier transitions
+- Smooth modal transitions
+- Scrollable modal content
 
 ### Typography
 - **Font**: Poppins (300-800 weights)
-- **Title**: Gradient text with animated glow
+- **Gradient Headings**: Animated gradient text
 - **Labels**: Medium weight with letter spacing
 
 ## 🔒 Security Features
@@ -296,28 +300,42 @@ Content-Type: application/json
 - **One-Time Use**: OTPs are deleted after verification
 - **User Isolation**: Foreign key constraints ensure data separation
 - **Session Management**: Secure localStorage-based sessions
+- **SQL Injection Protection**: Parameterized queries
 - **HTTPS Ready**: Designed for production deployment
 
 ## 📱 Responsive Design
 
-- **Desktop**: Full animations and effects
-- **Tablet** (≤768px): Adjusted spacing and font sizes
-- **Mobile** (≤480px): Optimized layout and touch targets
+### Breakpoints
+- **Desktop** (>1024px): Full sidebar, 3-column stats grid
+- **Tablet** (768px-1024px): Narrower sidebar, 2-column stats
+- **Mobile** (<768px): Horizontal scrolling sidebar, stacked layout
+
+### Mobile Optimizations
+- Horizontal scrolling navigation
+- Stacked header components
+- Full-width buttons and inputs
+- Optimized table layout
+- Touch-friendly action buttons
 
 ## 🧪 Testing
 
 ### Test User Flow
 
-1. **New User**:
-   - Enter email → Receive OTP → Verify
-   - Redirected to password generator
-   - Generate and save password
-   - Redirected to password manager
+1. **Login Flow**:
+   - Visit `http://localhost:3000`
+   - Enter email → Click "Send OTP"
+   - Check email for OTP code
+   - Enter OTP → Click "Verify OTP"
+   - Redirected to dashboard
 
-2. **Returning User with Passwords**:
-   - Enter email → Receive OTP → Verify
-   - Directly redirected to password manager
-   - View saved passwords
+2. **Dashboard Operations**:
+   - View saved passwords in table
+   - Click "Add Password" to open modal
+   - Generate secure password
+   - Save password to vault
+   - Search passwords by website
+   - Copy, view, or delete passwords
+   - Click "Logout" to end session
 
 3. **Multiple Users**:
    - Login as User A → Save passwords → Logout
@@ -344,16 +362,46 @@ Content-Type: application/json
 - Verify user is logged in (check localStorage)
 - Check browser console for errors
 
+**CSS not loading:**
+- Hard refresh browser (Ctrl+Shift+R)
+- Clear browser cache
+- Check that css folder exists in frontend
+- Verify CSS file paths in HTML
+
+## 🎯 Application Flow
+
+```
+User Access
+    ↓
+index.html (Login)
+    ↓
+Enter Email → Send OTP
+    ↓
+Verify OTP
+    ↓
+indexprofile.html (Dashboard)
+    ↓
+┌─────────────────────────┐
+│  Password Manager       │
+│  - View Passwords       │
+│  - Add New Password     │
+│  - Search Passwords     │
+│  - Copy/Delete Actions  │
+│  - Logout               │
+└─────────────────────────┘
+```
+
 ## 📝 Future Enhancements
 
 - [ ] Password strength indicator
-- [ ] Two-factor authentication options
+- [ ] Password history tracking
+- [ ] Bulk password import/export
 - [ ] Password sharing functionality
 - [ ] Browser extension
 - [ ] Mobile app (React Native)
 - [ ] Biometric authentication
 - [ ] Password breach checker
-- [ ] Export/import passwords
+- [ ] Multi-language support
 
 ## 👨‍💻 Development
 
@@ -378,6 +426,12 @@ This project is open source and available under the [MIT License](LICENSE).
 
 Contributions, issues, and feature requests are welcome!
 
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
 ## 📧 Contact
 
 For questions or support, please contact the development team.
@@ -386,4 +440,6 @@ For questions or support, please contact the development team.
 
 **Made with ❤️ using Node.js, Express, and MySQL**
 
-**Design**: Ultra-Modern Dark Theme with Neon Accents ✨
+**Design**: Ultra-Modern Dark Theme with Glassmorphism ✨
+
+**Architecture**: Modular, Secure, Scalable 🚀
