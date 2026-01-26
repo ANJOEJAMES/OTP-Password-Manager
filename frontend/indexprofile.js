@@ -68,211 +68,306 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             });
 
-            document.querySelectorAll(".copy-password").forEach(button => {
-                button.addEventListener("click", function () {
-                    copyToClipboard(`password-${this.dataset.index}`);
+            // Dashboard Elements
+            const modal = document.getElementById("add-password-modal");
+            const closeModalBtn = document.getElementById("close-modal-btn");
+            const cancelBtn = document.getElementById("cancel-btn");
+
+            // Form Elements
+            const lengthRange = document.getElementById("length-range");
+            const lengthInput = document.getElementById("length");
+            const searchInput = document.getElementById("search-passwords");
+            const userEmailDisplay = document.getElementById("user-email-display");
+            const totalCountDisplay = document.getElementById("total-count");
+
+            if (!userEmail) {
+                alert("No user logged in. Redirecting to login...");
+                window.location.href = "index.html";
+            } else {
+                userEmailDisplay.textContent = userEmail;
+                fetchPasswords(userEmail);
+            }
+
+            // Modal Logic
+            function openModal() {
+                modal.classList.remove("hidden");
+                // Check for saved password from generator page
+                const savedPassword = sessionStorage.getItem("savedPassword");
+                if (savedPassword) {
+                    passwordInput.value = savedPassword;
+                    sessionStorage.removeItem("savedPassword"); // Clear it
+                } else {
+                    // Generate a fresh one if empty
+                    if (!passwordInput.value) passwordInput.value = generatePassword();
+                }
+                websiteInput.focus();
+            }
+
+            function closeModal() {
+                modal.classList.add("hidden");
+                // Optional: clear inputs on close
+                // websiteInput.value = "";
+            }
+
+            addPasswordBtn.addEventListener("click", openModal);
+            closeModalBtn.addEventListener("click", closeModal);
+            cancelBtn.addEventListener("click", closeModal);
+
+            // Sync Length Range and Number Input
+            lengthRange.addEventListener("input", (e) => lengthInput.value = e.target.value);
+            lengthInput.addEventListener("input", (e) => lengthRange.value = e.target.value);
+
+            // Logout
+            logoutBtn.addEventListener("click", function () {
+                if (confirm("Are you sure you want to logout?")) {
+                    localStorage.removeItem("userEmail");
+                    sessionStorage.clear();
+                    window.location.href = "index.html";
+                }
+            });
+
+            async function fetchPasswords(email) {
+                try {
+                    const response = await fetch("http://localhost:3000/get-passwords", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        renderPasswords(data.passwords);
+                        updateStats(data.passwords.length);
+                    } else {
+                        console.error("Failed to fetch passwords");
+                    }
+                } catch (error) {
+                    console.error("Error fetching passwords:", error);
+                }
+            }
+
+            function renderPasswords(passwords) {
+                const passwordTable = document.getElementById("password-table");
+                passwordTable.innerHTML = "";
+
+                if (passwords.length === 0) {
+                    const emptyRow = document.createElement("tr");
+                    emptyRow.innerHTML = `
+                <td colspan="3">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-text">
+                            <h3>No passwords yet</h3>
+                            <p>Click "Add Password" to secure your first account.</p>
+                        </div>
+                    </div>
+                </td>
+            `;
+                    passwordTable.appendChild(emptyRow);
+                    return;
+                }
+
+                passwords.forEach((item) => {
+                    const domain = new URL(item.website).hostname;
+                    // Use Google's favicon service or a generic icon on error
+                    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                <td>
+                    <div class="website-cell">
+                        <div class="favicon-wrapper">
+                            <img src="${faviconUrl}" alt="icon" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDggLTggOHoiLz48L3N2Z24+='">
+                        </div>
+                        <div class="website-info">
+                            <span class="website-name">${domain}</span>
+                            <a href="${item.website}" target="_blank" class="website-url">${item.website}</a>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="password-cell">
+                        <input type="password" value="${item.password}" readonly class="password-text" id="pass-${item.id}">
+                        <button class="action-btn toggle" onclick="togglePasswordVisibility('${item.id}')" title="Show/Hide">
+                            👁️
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <div class="actions-cell">
+                        <button class="action-btn copy" onclick="copyToClipboard('${item.password}', this)" title="Copy Password">
+                            📋
+                        </button>
+                        <button class="action-btn delete" onclick="confirmDelete('${item.user_id}', '${item.id}')" title="Delete">
+                            🗑️
+                        </button>
+                    </div>
+                </td>
+            `;
+                    passwordTable.appendChild(row);
+                });
+            }
+
+            // Expose functions to window scope for onclick handlers
+            window.togglePasswordVisibility = function (id) {
+                const input = document.getElementById(`pass-${id}`);
+                const btn = input.nextElementSibling; // The toggle button
+                if (input.type === "password") {
+                    input.type = "text";
+                    btn.textContent = "🙈"; // Eye slash
+                } else {
+                    input.type = "password";
+                    btn.textContent = "👁️"; // Eye
+                }
+            }
+
+            window.copyToClipboard = function (text, btnElement) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = btnElement.textContent;
+                    btnElement.textContent = "✅";
+                    btnElement.classList.add("success");
+                    setTimeout(() => {
+                        btnElement.textContent = originalText;
+                        btnElement.classList.remove("success");
+                    }, 1500);
+                });
+            }
+
+            window.confirmDelete = async function (userId, passwordId) {
+                if (confirm("Are you sure you want to delete this password permanently?")) {
+                    await deletePassword(userId, passwordId);
+                }
+            }
+
+            function updateStats(count) {
+                totalCountDisplay.textContent = count;
+                // Logic for security score could go here
+            }
+
+            // Search Functionality
+            searchInput.addEventListener("input", (e) => {
+                const term = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll("#password-table tr");
+                rows.forEach(row => {
+                    const website = row.querySelector("a")?.textContent.toLowerCase() || "";
+                    if (website.includes(term)) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
                 });
             });
 
-            document.querySelectorAll(".delete-password").forEach(button => {
-                button.addEventListener("click", function () {
-                    const passwordId = this.getAttribute("data-id");
-                    const userId = this.getAttribute("data-user-id");
-                    deletePassword(passwordId, userId);
+            // Save Password Logic
+            savePasswordBtn.addEventListener("click", async function () {
+                const website = websiteInput.value.trim();
+                const password = passwordInput.value;
+
+                if (!website || !password) {
+                    alert("Please enter a website and generate a password.");
+                    return;
+                }
+
+                const email = localStorage.getItem("userEmail");
+
+                try {
+                    const response = await fetch("http://localhost:3000/save-password", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email, website, password }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        alert("Password saved successfully!");
+                        fetchPasswords(email);
+                        closeModal();
+                        websiteInput.value = "";
+                        // passwordInput.value = ""; // Optional: keep last generated
+                    } else {
+                        alert("Failed to save password.");
+                    }
+                } catch (error) {
+                    console.error("Error saving password:", error);
+                }
+            });
+
+            // Generate Password Function
+            function generatePassword() {
+                const length = parseInt(document.getElementById("length").value);
+                const includeUppercase = document.getElementById("uppercase").checked;
+                const includeLowercase = document.getElementById("lowercase").checked;
+                const includeNumbers = document.getElementById("numbers").checked;
+                const includeSymbols = document.getElementById("symbols").checked;
+                const mandatoryString = document.getElementById("mandatory-string").value;
+
+                const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+                const numberChars = "0123456789";
+                const symbolChars = "!@#$%^&*()_+~`|}{[]:;?><,./-=";
+
+                let charPool = "";
+                if (includeUppercase) charPool += uppercaseChars;
+                if (includeLowercase) charPool += lowercaseChars;
+                if (includeNumbers) charPool += numberChars;
+                if (includeSymbols) charPool += symbolChars;
+
+                if (charPool === "") {
+                    alert("Please select at least one character type.");
+                    return "";
+                }
+
+                let password = "";
+                for (let i = 0; i < length; i++) {
+                    const randomIndex = Math.floor(Math.random() * charPool.length);
+                    password += charPool[randomIndex];
+                }
+
+                if (mandatoryString) {
+                    const insertIndex = Math.floor(Math.random() * (password.length + 1));
+                    password = password.slice(0, insertIndex) + mandatoryString + password.slice(insertIndex);
+                }
+
+                return password;
+            }
+
+            generatePasswordBtn.addEventListener("click", () => {
+                passwordInput.value = generatePassword();
+            });
+
+            copyPasswordBtn.addEventListener("click", () => {
+                if (!passwordInput.value) return;
+                navigator.clipboard.writeText(passwordInput.value).then(() => {
+                    const originalText = copyPasswordBtn.textContent;
+                    copyPasswordBtn.textContent = "✅";
+                    setTimeout(() => copyPasswordBtn.textContent = originalText, 1500);
                 });
             });
 
+            async function deletePassword(userId, passwordId) {
+                try {
+                    const response = await fetch("http://localhost:3000/delete-password", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId, passwordId }),
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        fetchPasswords(userEmail); // Refresh list
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    console.error("Error deleting password:", error);
+                }
+            }
         } catch (error) {
             console.error("Error fetching passwords:", error);
             alert("Error fetching passwords. Please try again.");
         }
     }
-
-    async function deletePassword(passwordId, userId) {
-        if (!passwordId || !userId) {
-            alert("Error: Invalid password ID or user ID.");
-            return;
-        }
-
-        if (!confirm("Are you sure you want to delete this password?")) return;
-
-        try {
-            const response = await fetch("http://localhost:3000/delete-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, passwordId }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                alert("Password deleted successfully!");
-                fetchPasswords(userEmail);
-            } else {
-                alert("Failed to delete password: " + data.message);
-            }
-        } catch (error) {
-            console.error("Error deleting password:", error);
-            alert("Error deleting password. Please try again.");
-        }
-    }
-
-    function generatePassword() {
-        const length = parseInt(document.getElementById("length").value, 10);
-        const includeUppercase = document.getElementById("uppercase").checked;
-        const includeLowercase = document.getElementById("lowercase").checked;
-        const includeNumbers = document.getElementById("numbers").checked;
-        const includeSymbols = document.getElementById("symbols").checked;
-        const mandatoryString = document.getElementById("mandatory-string").value; // Get user-defined string
-
-        const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
-        const numberChars = "0123456789";
-        const symbolChars = "!@#$%^&*()_+-=[]{}|;:'\",.<>?/";
-
-        let allowedChars = "";
-        if (includeUppercase) allowedChars += uppercaseChars;
-        if (includeLowercase) allowedChars += lowercaseChars;
-        if (includeNumbers) allowedChars += numberChars;
-        if (includeSymbols) allowedChars += symbolChars;
-
-        if (allowedChars === "") {
-            alert("Please select at least one character type.");
-            return "";
-        }
-
-        if (mandatoryString.length > length) {
-            alert("The mandatory string is longer than the password length.");
-            return "";
-        }
-
-        let passwordArray = new Array(length);
-
-        // Fill the password with random characters first
-        for (let i = 0; i < length; i++) {
-            const randomIndex = Math.floor(Math.random() * allowedChars.length);
-            passwordArray[i] = allowedChars[randomIndex];
-        }
-
-        // Insert the mandatory string at a random position
-        const startIndex = Math.floor(Math.random() * (length - mandatoryString.length + 1));
-        for (let i = 0; i < mandatoryString.length; i++) {
-            passwordArray[startIndex + i] = mandatoryString[i];
-        }
-
-        const generatedPassword = passwordArray.join("");
-        sessionStorage.setItem("savedPassword", generatedPassword);
-
-        return generatedPassword; // ✅ Return the generated password
-    }
-
-    addPasswordBtn.addEventListener("click", function () {
-        // Check if there's a saved password from password-generator.html
-        const savedPassword = sessionStorage.getItem("savedPassword");
-
-        if (savedPassword) {
-            // If password exists, just show the form with the password pre-filled
-            addPasswordSection.style.display = "block";
-            passwordInput.value = savedPassword;
-
-            // Hide the password generation options since we already have a password
-            const lengthLabel = document.querySelector('label[for="length"]');
-            const mandatoryLabel = document.querySelector('label[for="mandatory-string"]');
-            const optionsHeading = document.querySelector('#add-password-section h3');
-
-            document.getElementById("length").style.display = "none";
-            if (lengthLabel) lengthLabel.style.display = "none";
-
-            document.querySelectorAll(".checkbox-group").forEach(el => el.style.display = "none");
-            if (optionsHeading && optionsHeading.textContent.includes("Password Options")) {
-                optionsHeading.style.display = "none";
-            }
-
-            document.getElementById("mandatory-string").style.display = "none";
-            if (mandatoryLabel) mandatoryLabel.style.display = "none";
-
-            document.getElementById("generate-password-btn").style.display = "none";
-
-            // Focus on website input for user convenience
-            websiteInput.focus();
-        } else {
-            // Normal flow - generate a new password
-            addPasswordSection.style.display = "block";
-            passwordInput.value = generatePassword();
-
-            // Show all password generation options
-            const lengthLabel = document.querySelector('label[for="length"]');
-            const mandatoryLabel = document.querySelector('label[for="mandatory-string"]');
-            const optionsHeading = document.querySelector('#add-password-section h3');
-
-            document.getElementById("length").style.display = "block";
-            if (lengthLabel) lengthLabel.style.display = "block";
-
-            document.querySelectorAll(".checkbox-group").forEach(el => el.style.display = "flex");
-            if (optionsHeading) optionsHeading.style.display = "block";
-
-            document.getElementById("mandatory-string").style.display = "block";
-            if (mandatoryLabel) mandatoryLabel.style.display = "block";
-
-            document.getElementById("generate-password-btn").style.display = "inline-block";
-        }
-    });
-
-    savePasswordBtn.addEventListener("click", async function () {
-        let website = websiteInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        if (!website || !password) {
-            alert("Please enter both website and password.");
-            return;
-        }
-
-        website = formatURL(website);
-
-        try {
-            const response = await fetch("http://localhost:3000/save-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: userEmail, website, password }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                alert("Password saved successfully!");
-                fetchPasswords(userEmail);
-                addPasswordSection.style.display = "none";
-
-                // Clear the saved password from sessionStorage
-                sessionStorage.removeItem("savedPassword");
-
-                // Reset the form
-                websiteInput.value = "";
-                passwordInput.value = "";
-
-                // Reset visibility of password generation options
-                const lengthLabel = document.querySelector('label[for="length"]');
-                const mandatoryLabel = document.querySelector('label[for="mandatory-string"]');
-                const optionsHeading = document.querySelector('#add-password-section h3');
-
-                document.getElementById("length").style.display = "block";
-                if (lengthLabel) lengthLabel.style.display = "block";
-
-                document.querySelectorAll(".checkbox-group").forEach(el => el.style.display = "flex");
-                if (optionsHeading) optionsHeading.style.display = "block";
-
-                document.getElementById("mandatory-string").style.display = "block";
-                if (mandatoryLabel) mandatoryLabel.style.display = "block";
-
-                document.getElementById("generate-password-btn").style.display = "inline-block";
-            } else {
-                alert("Failed to save password.");
-            }
-        } catch (error) {
-            console.error("Error saving password:", error);
-            alert("Error saving password. Please try again.");
-        }
-    });
 
     function togglePassword(index) {
         const passwordField = document.getElementById(`password-${index}`);
