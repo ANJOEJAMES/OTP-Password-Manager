@@ -97,6 +97,13 @@ apiRouter.post("/send-otp", (req, res) => {
         to: email,
         subject: "OTP for Registration",
         text: `Your OTP for registration is: ${otp}. It will expire in 5 minutes.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2>OTP Verification</h2>
+            <p>Your OTP for registration is: <strong style="font-size: 24px; color: #007bff;">${otp}</strong></p>
+            <p>It will expire in 5 minutes. Please do not share this code with anyone.</p>
+          </div>
+        `,
       };
 
       transporter.sendMail(mailOptions, (err) => {
