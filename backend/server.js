@@ -1,7 +1,7 @@
 const express = require("express");
 const nodemailer = require("nodemailer");
 const cryptoJS = require("crypto-js");
-const mysql = require("mysql");
+const mysql = require("mysql2");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
@@ -31,6 +31,8 @@ const db = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
+  ssl: { rejectUnauthorized: false },
 });
 
 db.connect((err) => {
@@ -43,7 +45,9 @@ db.connect((err) => {
 
 // **Nodemailer Setup**
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
+  port: process.env.SMTP_PORT || 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -51,7 +55,6 @@ const transporter = nodemailer.createTransport({
 });
 
 // **OTP Storage**
-const otpStore = {};
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // **Encrypt & Decrypt Functions**
@@ -76,19 +79,26 @@ app.post("/send-otp", (req, res) => {
   if (!email) return res.status(400).json({ success: false, message: "Email is required" });
 
   const otp = generateOTP();
-  otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "OTP for Registration",
-    text: `Your OTP for registration is: ${otp}. It will expire in 5 minutes.`,
-  };
+  db.query("DELETE FROM otp_storage WHERE email = ?", [email], (err) => {
+    if (err) return res.status(500).json({ success: false, message: "Failed to process OTP request" });
 
-  transporter.sendMail(mailOptions, (err) => {
-    if (err) return res.status(500).json({ success: false, message: "Failed to send OTP" });
-    console.log(`✅ OTP sent to ${email}: ${otp}`);
-    res.json({ success: true, message: "OTP sent successfully" });
+    db.query("INSERT INTO otp_storage (email, otp) VALUES (?, ?)", [email, otp], (err) => {
+      if (err) return res.status(500).json({ success: false, message: "Failed to store OTP" });
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "OTP for Registration",
+        text: `Your OTP for registration is: ${otp}. It will expire in 5 minutes.`,
+      };
+
+      transporter.sendMail(mailOptions, (err) => {
+        if (err) return res.status(500).json({ success: false, message: "Failed to send OTP" });
+        console.log(`✅ OTP sent to ${email}: ${otp}`);
+        res.json({ success: true, message: "OTP sent successfully" });
+      });
+    });
   });
 });
 
@@ -96,17 +106,24 @@ app.post("/send-otp", (req, res) => {
 app.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
 
-  if (!otpStore[email] || otpStore[email].otp !== otp || otpStore[email].expiresAt < Date.now()) {
-    return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
-  }
-
-  delete otpStore[email]; // OTP is one-time use
-
-  // Check if user exists
-  db.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+  db.query("SELECT *, TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS age_minutes FROM otp_storage WHERE email = ? AND otp = ?", [email, otp], (err, otpResults) => {
     if (err) return res.status(500).json({ success: false, error: err.message });
 
-    if (results.length > 0) {
+    if (otpResults.length === 0) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    if (otpResults[0].age_minutes >= 5) {
+      return res.status(400).json({ success: false, message: "Expired OTP" });
+    }
+
+    db.query("DELETE FROM otp_storage WHERE email = ?", [email]); // OTP is one-time use
+
+    // Check if user exists
+    db.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+      if (err) return res.status(500).json({ success: false, error: err.message });
+
+      if (results.length > 0) {
       // Existing user - check if they have saved passwords
       const userId = results[0].id;
 
@@ -125,6 +142,7 @@ app.post("/verify-otp", (req, res) => {
         res.json({ success: true, redirect: "indexprofile.html", email: email });
       });
     }
+  });
   });
 });
 
