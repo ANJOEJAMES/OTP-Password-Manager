@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function fetchPasswords(email) {
         try {
-            const response = await fetch("http://localhost:3000/get-passwords", {
+            const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/get-passwords", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             async function fetchPasswords(email) {
                 try {
-                    const response = await fetch("http://localhost:3000/get-passwords", {
+                    const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/get-passwords", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ email }),
@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const email = localStorage.getItem("userEmail");
 
                 try {
-                    const response = await fetch("http://localhost:3000/save-password", {
+                    const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/save-password", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ email, website, password }),
@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             async function deletePassword(userId, passwordId) {
                 try {
-                    const response = await fetch("http://localhost:3000/delete-password", {
+                    const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/delete-password", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ userId, passwordId }),

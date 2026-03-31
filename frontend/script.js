@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     sendOTPBtn.disabled = true; // Disable button to prevent multiple clicks
 
-    fetch("http://localhost:3000/send-otp", {
+    fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    fetch("http://localhost:3000/verify-otp", {
+    fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp }),
