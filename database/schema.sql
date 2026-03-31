@@ -16,6 +16,7 @@ CREATE TABLE passwords (
 );
 
 CREATE TABLE otp_storage (
+  id INT AUTO_INCREMENT PRIMARY KEY,
   email varchar(255) DEFAULT NULL,
   otp varchar(6) DEFAULT NULL,
   created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP
