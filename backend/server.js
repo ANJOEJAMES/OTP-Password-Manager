@@ -93,7 +93,7 @@ apiRouter.post("/send-otp", (req, res) => {
       if (err) return res.status(500).json({ success: false, message: "Failed to store OTP" });
 
       const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `OTP System <${process.env.SENDER_EMAIL || process.env.EMAIL_USER}>`,
         to: email,
         subject: "OTP for Registration",
         text: `Your OTP for registration is: ${otp}. It will expire in 5 minutes.`,
