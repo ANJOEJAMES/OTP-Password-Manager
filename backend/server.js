@@ -124,25 +124,25 @@ app.post("/verify-otp", (req, res) => {
       if (err) return res.status(500).json({ success: false, error: err.message });
 
       if (results.length > 0) {
-      // Existing user - check if they have saved passwords
-      const userId = results[0].id;
+        // Existing user - check if they have saved passwords
+        const userId = results[0].id;
 
-      db.query("SELECT COUNT(*) as passwordCount FROM passwords WHERE user_id = ?", [userId], (err, passwordResults) => {
-        if (err) return res.status(500).json({ success: false, error: err.message });
+        db.query("SELECT COUNT(*) as passwordCount FROM passwords WHERE user_id = ?", [userId], (err, passwordResults) => {
+          if (err) return res.status(500).json({ success: false, error: err.message });
 
-        // Always redirect to dashboard (indexprofile.html)
-        res.json({ success: true, redirect: "indexprofile.html", email: email });
-      });
-    } else {
-      // New user - create user and redirect to dashboard
-      db.query("INSERT INTO users (email) VALUES (?)", [email], (err, insertResult) => {
-        if (err) return res.status(500).json({ success: false, error: err.message });
+          // Always redirect to dashboard (indexprofile.html)
+          res.json({ success: true, redirect: "indexprofile.html", email: email });
+        });
+      } else {
+        // New user - create user and redirect to dashboard
+        db.query("INSERT INTO users (email) VALUES (?)", [email], (err, insertResult) => {
+          if (err) return res.status(500).json({ success: false, error: err.message });
 
-        // Redirect new user to dashboard
-        res.json({ success: true, redirect: "indexprofile.html", email: email });
-      });
-    }
-  });
+          // Redirect new user to dashboard
+          res.json({ success: true, redirect: "indexprofile.html", email: email });
+        });
+      }
+    });
   });
 });
 
@@ -249,6 +249,10 @@ app.post("/delete-password", async (req, res) => {
     console.error("Error deleting password:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
+});
+
+app.get("/hello", (req, res) => {
+  res.send("Hello World!");
 });
 
 
