@@ -11,8 +11,7 @@ const app = express();
 const PORT = 3000;
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
-  console.error("❌ SECRET_KEY is missing in .env file!");
-  process.exit(1);
+  console.error("❌ SECRET_KEY is missing in environment variables! Crypto functions will fail.");
 }
 
 // **Middleware**
@@ -25,22 +24,26 @@ app.use(express.static(path.join(__dirname, "../frontend"))); // Serve static fi
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "../frontend/index.html")));
 app.get("/indexprofile", (req, res) => res.sendFile(path.join(__dirname, "../frontend/indexprofile.html")));
 
-// **MySQL Connection**
-const db = mysql.createConnection({
+// **MySQL Connection Pool (Serverless Friendly)**
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306,
   ssl: { rejectUnauthorized: false },
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect((err) => {
+db.getConnection((err, connection) => {
   if (err) {
     console.error("❌ MySQL Connection Failed:", err);
     return;
   }
-  console.log("✅ MySQL Connected");
+  console.log("✅ MySQL Connected (Pool)");
+  connection.release();
 });
 
 // **Nodemailer Setup**
