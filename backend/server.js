@@ -73,8 +73,11 @@ function decryptPassword(encryptedPassword) {
   }
 }
 
+// **API Router**
+const apiRouter = express.Router();
+
 // **Send OTP API**
-app.post("/send-otp", (req, res) => {
+apiRouter.post("/send-otp", (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ success: false, message: "Email is required" });
 
@@ -103,7 +106,7 @@ app.post("/send-otp", (req, res) => {
 });
 
 // **Verify OTP API & Redirect**
-app.post("/verify-otp", (req, res) => {
+apiRouter.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
 
   db.query("SELECT *, TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS age_minutes FROM otp_storage WHERE email = ? AND otp = ?", [email, otp], (err, otpResults) => {
@@ -147,7 +150,7 @@ app.post("/verify-otp", (req, res) => {
 });
 
 // **Save Password API**
-app.post("/save-password", (req, res) => {
+apiRouter.post("/save-password", (req, res) => {
   const { email, website, password } = req.body;
   if (!email || !website || !password) {
     return res.status(400).json({ success: false, message: "All fields are required" });
@@ -186,7 +189,7 @@ app.post("/save-password", (req, res) => {
 });
 
 // **Retrieve Saved Passwords API**
-app.post("/get-passwords", (req, res) => {
+apiRouter.post("/get-passwords", (req, res) => {
   const { email } = req.body;
 
   if (!email) {
@@ -222,7 +225,7 @@ app.post("/get-passwords", (req, res) => {
 
 
 // **Delete Saved Password API**
-app.post("/delete-password", async (req, res) => {
+apiRouter.post("/delete-password", async (req, res) => {
   const { userId, passwordId } = req.body;
 
   if (!userId || !passwordId) {
@@ -256,7 +259,17 @@ app.get("/hello", (req, res) => {
 });
 
 
-// **Start Server**
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// Mount the API router
+app.use("/api", apiRouter);
+
+// For Netlify deployment, also mount on the serverless path
+app.use("/.netlify/functions/api", apiRouter);
+
+// **Start Server (ignored when run via Netlify Functions)**
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

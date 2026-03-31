@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function fetchPasswords(email) {
         try {
-            const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/get-passwords", {
+            const response = await fetch("/api/get-passwords", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             async function fetchPasswords(email) {
                 try {
-                    const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/get-passwords", {
+                    const response = await fetch("/api/get-passwords", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ email }),
@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const email = localStorage.getItem("userEmail");
 
                 try {
-                    const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/save-password", {
+                    const response = await fetch("/api/save-password", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ email, website, password }),
@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             async function deletePassword(userId, passwordId) {
                 try {
-                    const response = await fetch("https://otp-password-manager-rhsps4zxc-anjoe-james-projects.vercel.app/delete-password", {
+                    const response = await fetch("/api/delete-password", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ userId, passwordId }),
